@@ -14,7 +14,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {
     Popover,
     PopoverTrigger,
@@ -32,39 +32,11 @@ import {
     CommandItem,
 } from "@/components/ui/command";
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
-
-export default function CompanyCreation() {
-    const [companyInfo, setCompanyInfo] = useState<any>();
-
-    return (
-        <div className="flex flex-col">
-            <Tabs className="w-[100%] mt-4">
-                <TabsList className="w-[100%]">
-                    <TabsTrigger className="w-[100%]" value="company">
-                        Company
-                    </TabsTrigger>
-                    <TabsTrigger className="w-[100%]" value="business">
-                        Business
-                    </TabsTrigger>
-                    <TabsTrigger className="w-[100%]" value="tax">
-                        Tax
-                    </TabsTrigger>
-                </TabsList>
-                <TabsContent value="company">
-                    <CompanyInfo onDataSubmit={(values: any) => {
-                        console.log(values);
-                    }}></CompanyInfo>
-                </TabsContent>
-                <TabsContent value="business">
-                    <BusinessCompany></BusinessCompany>
-                </TabsContent>
-                <TabsContent value="tax">
-                    <CompanyTaxInfo></CompanyTaxInfo>
-                </TabsContent>
-            </Tabs>
-        </div>
-    );
-}
+import {StorageService} from "@/utils/local-storage-service";
+import {ChevronRightIcon} from "@radix-ui/react-icons";
+import {minimalCompany} from "@/utils/interfaces/company-interface";
+import {DatabaseService} from "@/app/service/database-service";
+import {toast} from "sonner";
 
 const companySchema = z.object({
     companyName: z.string().min(2).max(50),
@@ -73,30 +45,162 @@ const companySchema = z.object({
     bookEnds: z.date(),
 });
 
-export function CompanyInfo({onDataSubmit}: { onDataSubmit: (data: any) => void }) {
-    const [companyName, setCompanyName] = useState<any>();
-    const [alternateName, setAlternateName] = useState<any>();
-    const [bookBegins, setBookBegins] = useState<any>()
-    const [bookEnds, setBookEnds] = useState<any>()
+const taxSchema = z.object({
+    registrationType: z.string(),
+    gstNumber: z.string(),
+    companyPan: z.string(),
+});
 
+const businessSchema = z.object({
+    businessType: z.string(),
+    businessAddress: z.string().min(5).max(40),
+    businessContact: z.string(),
+    businessEmail: z.string(),
+});
+
+
+export default function CompanyCreation({closeDialog} : {closeDialog: () => void}) {
+    const [companyInfo, setCompanyInfo] = useState<any>();
+    const [businessInfo, setBusinessInfo] = useState<any>();
+    const [taxInfo, setTaxInfo] = useState<any>()
+    const [activeTab, setActiveTab] = useState<any>("company")
+
+    const crumbBar = () => {
+        if (activeTab === "company") {
+            return (
+                <p className={"text-xs"}>Company Info</p>
+            )
+        } else if (activeTab === "business") {
+            return (
+                <div className={"flex gap-2 items-center"}>
+                    <Button variant={"link"} className={"text-xs px-0 h-4"}
+                            onClick={() => {
+                                setActiveTab("company")
+                            }}
+                    >
+                        Company Info
+                    </Button>
+                    <ChevronRightIcon></ChevronRightIcon>
+                    <p className={"text-xs"}>Business Info</p>
+                </div>
+            );
+        } else if (activeTab === "tax") {
+            return (
+                <div className={"flex gap-2 items-center"}>
+                    <Button variant={"link"} className={"text-xs px-0 h-4"}
+                            onClick={() => {
+                                setActiveTab("company")
+                            }}
+                    >
+                        Company Info
+                    </Button>
+                    <ChevronRightIcon></ChevronRightIcon>
+                    <Button variant={"link"} className={"text-xs px-0 h-4"}
+                            onClick={() => {
+                                setActiveTab("business")
+                            }}
+                    >
+                        Business Info
+                    </Button>
+                    <ChevronRightIcon></ChevronRightIcon>
+                    <p className={"text-xs"}>Tax Info</p>
+                </div>
+            );
+        }
+    }
+
+    return (
+        <div className="flex flex-col">
+            <div className={"flex mt-3"}>
+                {
+                    crumbBar()
+                }
+            </div>
+            <Tabs className="w-[100%] mt-2" value={activeTab}>
+                <TabsContent value="company">
+                    <CompanyInfo onDataSubmit={(values: any) => {
+                        setCompanyInfo(values);
+                        setActiveTab("business");
+                    }}></CompanyInfo>
+                </TabsContent>
+                <TabsContent value="business">
+                    <BusinessCompany
+                        onDataSubmit={(values) => {
+                            setBusinessInfo(values);
+                            setActiveTab("tax");
+                        }}
+                    ></BusinessCompany>
+                </TabsContent>
+                <TabsContent value="tax">
+                    <CompanyTaxInfo
+                        onDataSubmit={(values) => {
+                            setTaxInfo(values);
+                            const companyData: minimalCompany = {
+                                company_name: companyInfo['companyName'],
+                                company_alias: companyInfo['companyAlias'],
+                                book_begins: companyInfo['bookBegins'],
+                                book_ends: companyInfo['bookEnds'],
+                                company_gst: values['gstNumber'],
+                                company_type: values['registrationType'],
+                                company_address: businessInfo['businessAddress'],
+                                company_email: businessInfo['businessEmail'],
+                                company_contact: businessInfo['businessContact'],
+                                business_type: businessInfo['businessType'],
+                                company_pan: values['companyPan'],
+                            }
+
+                            const userId = StorageService().readFromLocalStorage("user")['userId'];
+                            DatabaseService().createCompany(companyData, userId);
+                            closeDialog();
+                        }}
+                    ></CompanyTaxInfo>
+                </TabsContent>
+            </Tabs>
+            {
+                activeTab != "company" ?
+                    <Button className={"absolute bottom-[24px]"} variant={"secondary"}
+                            onClick={() => {
+                                if (activeTab === "business") {
+                                    setActiveTab("company");
+                                } else if (activeTab === "tax") {
+                                    setActiveTab(("business"))
+                                }
+                            }}
+                    >
+                        Previous
+                    </Button>
+                    : <></>
+            }
+        </div>
+    );
+}
+
+export function CompanyInfo({onDataSubmit}: { onDataSubmit: (data: any) => void }) {
 
     const form = useForm<z.infer<typeof companySchema>>({
         resolver: zodResolver(companySchema),
         defaultValues: {
-            companyName: companyName,
-            bookBegins: bookBegins,
-            companyAlias: alternateName,
-            bookEnds: bookEnds
+            companyName: StorageService().readFromLocalStorage("companyInfo") != null
+                ? StorageService().readFromLocalStorage("companyInfo")['companyName'] : "",
+            companyAlias:
+                StorageService().readFromLocalStorage("companyInfo") != null ?
+                    StorageService().readFromLocalStorage("companyInfo")['companyAlias'] : "",
+            bookBegins:
+                StorageService().readFromLocalStorage("companyInfo") != null ?
+                    new Date(StorageService().readFromLocalStorage("companyInfo")['bookBegins']) : new Date(),
+            bookEnds:
+                StorageService().readFromLocalStorage("companyInfo") != null ?
+                    new Date(StorageService().readFromLocalStorage("companyInfo")['bookEnds']) : new Date()
         }
     });
 
     function onSubmit(values: z.infer<typeof companySchema>) {
-        console.log(companyName);
         onDataSubmit(values);
+        StorageService().saveToLocalStorage("companyInfo", values);
     }
 
     return (
-        <div className="flex flex-col mt-4">
+        <div className="flex flex-col px-0.5">
             <Avatar className="h-12 w-12 my-4">
                 <AvatarImage src="https://vercel.com/api/www/avatar?u=abhi4529&s=44"></AvatarImage>
             </Avatar>
@@ -109,11 +213,7 @@ export function CompanyInfo({onDataSubmit}: { onDataSubmit: (data: any) => void 
                             <FormItem>
                                 <FormLabel>Company Name</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Apple Inc." value={companyName}
-                                           onChange={(value)=>{
-                                               field.onChange(value.target.value);
-                                               setCompanyName(value.target.value);
-                                           }}
+                                    <Input placeholder="Apple Inc." {...field}
                                     ></Input>
                                 </FormControl>
                                 <FormMessage></FormMessage>
@@ -207,7 +307,7 @@ export function CompanyInfo({onDataSubmit}: { onDataSubmit: (data: any) => void 
                             )}
                         />
                     </div>
-                    <div className="flex justify-end pt-4">
+                    <div className="flex w-[100%] justify-end pt-4">
                         <Button type="submit">Next</Button>
                     </div>
                 </form>
@@ -215,13 +315,6 @@ export function CompanyInfo({onDataSubmit}: { onDataSubmit: (data: any) => void 
         </div>
     );
 }
-
-const businessSchema = z.object({
-    businessType: z.string(),
-    businessAddress: z.string().min(5).max(40),
-    businessContact: z.string(),
-    businessEmail: z.string(),
-});
 
 const businessType = [
     {
@@ -238,19 +331,21 @@ const businessType = [
     },
 ];
 
-export function BusinessCompany() {
+export function BusinessCompany({onDataSubmit}: { onDataSubmit: (data: any) => void }) {
     const [open, setOpen] = useState(false);
 
     const form = useForm<z.infer<typeof businessSchema>>({
         resolver: zodResolver(businessSchema),
+        defaultValues: StorageService().readFromLocalStorage("businessInfo")
     });
 
     function onSubmit(values: z.infer<typeof businessSchema>) {
-        console.log(values);
+        onDataSubmit(values);
+        StorageService().saveToLocalStorage("businessInfo", values);
     }
 
     return (
-        <div className="flex flex-col mt-6">
+        <div className="flex flex-col mt-6 px-0.5">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
                     <FormField
@@ -333,8 +428,7 @@ export function BusinessCompany() {
                             </FormItem>
                         )}
                     />
-                    <div className="flex justify-between pt-6">
-                        <Button variant={"secondary"}>Previous</Button>
+                    <div className="flex justify-end pt-6">
                         <Button type="submit">Next</Button>
                     </div>
                 </form>
@@ -358,21 +452,16 @@ const registrationTypes = [
     },
 ];
 
-const taxSchema = z.object({
-    registrationType: z.string(),
-    gstNumber: z.string(),
-    companyPan: z.string(),
-    invoiceType: z.string(),
-});
-
-export function CompanyTaxInfo() {
+export function CompanyTaxInfo({onDataSubmit}: { onDataSubmit: (data: any) => void }) {
     const [open, setOpen] = useState(false);
     const form = useForm<z.infer<typeof taxSchema>>({
         resolver: zodResolver(taxSchema),
+        defaultValues: StorageService().readFromLocalStorage("taxInfo")
     });
 
     function onSubmit(values: z.infer<typeof taxSchema>) {
-        console.log(values);
+        StorageService().saveToLocalStorage("taxInfo", values);
+        onDataSubmit(values);
     }
 
     return (
@@ -388,14 +477,15 @@ export function CompanyTaxInfo() {
                                 <FormControl>
                                     <Popover open={open} onOpenChange={setOpen}>
                                         <PopoverTrigger asChild>
-                                            <div
+                                            <Button
+                                                variant={"outline"}
                                                 className={cn(
                                                     buttonVariants({variant: "outline"}) +
                                                     " w-[100%] text-left font-normal justify-start"
                                                 )}
                                             >
                                                 {field.value ?? "Registration Type..."}
-                                            </div>
+                                            </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="p-0">
                                             <Command>
@@ -449,25 +539,8 @@ export function CompanyTaxInfo() {
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
-                        name="invoiceType"
-                        render={({field}) => (
-                            <FormItem>
-                                <FormLabel>Invoice Type</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="Select Invoice Type..."
-                                        {...field}
-                                    ></Input>
-                                </FormControl>
-                                <FormMessage></FormMessage>
-                            </FormItem>
-                        )}
-                    />
-                    <div className="flex justify-between pt-6">
-                        <Button variant={"secondary"}>Previous</Button>
-                        <Button type="submit">Next</Button>
+                    <div className="flex justify-end pt-6">
+                        <Button type="submit">Complete</Button>
                     </div>
                 </form>
             </Form>

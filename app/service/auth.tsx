@@ -94,6 +94,8 @@ export const Auth = () => {
                 const account = new Account(client);
 
                 try {
+
+
                     const promise = account.createEmailSession(
                         email,
                         password

@@ -12,7 +12,7 @@ import {IoLogoApple, IoLogoGoogle} from "react-icons/io";
 import {ImCheckboxUnchecked, ImFacebook} from "react-icons/im";
 import {IoCheckbox} from "react-icons/io5";
 
-export function SignUpCard(){
+export function SignUpCard() {
     const [openTipTool, setOpenTipTool] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [confirmPassword, setConfirmPassword] = useState<string>("")
@@ -51,7 +51,8 @@ export function SignUpCard(){
 
         setPasswordStrength(strength);
     }
-    return(
+
+    return (
         <Card>
             <CardHeader>
                 <CardTitle>Sign Up</CardTitle>

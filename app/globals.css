@@ -13,6 +13,19 @@
   transition-duration: .4s;
 }
 
+
+@keyframes fadeInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+
 @layer base {
   :root {
     --background: 0 0% 100%;

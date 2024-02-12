@@ -12,7 +12,6 @@ import {
 import {Input} from "@/components/ui/input";
 import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group";
 import {ChevronDownIcon, GridIcon, ListBulletIcon, MoonIcon, PlusIcon, SunIcon} from "@radix-ui/react-icons";
-import Link from "next/link";
 import {GoBell, GoCloud, GoWorkflow} from "react-icons/go";
 import {Dialog, DialogHeader} from "@/components/ui/dialog";
 import {
@@ -34,11 +33,37 @@ import {IoAdd} from "react-icons/io5";
 import {StorageService} from "@/utils/local-storage-service";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
+import {DatabaseService} from "@/app/service/database-service";
+import {Models} from "appwrite";
+import format from "date-fns/format";
 
 export default function Company() {
     const [defLayout, setDefLayout] = useState<string>("grid");
+    const [companies, setCompanies] = useState<Models.DocumentList<Models.Document>>()
     const {setTheme} = useTheme();
     const navigation = useRouter();
+    const [openDialog, setOpenDialog] = useState<boolean>(false);
+
+    function getCompanies() {
+        const userId = StorageService().readFromLocalStorage("user")['userId'];
+        const promise = DatabaseService().fetchCompanies(userId);
+
+        toast.promise(promise,
+            {
+                loading: "Refreshing Companies",
+                success: (data) => {
+                    setCompanies(data);
+                    return "Success"
+                },
+                error: (error) => {
+                    return error
+                }
+            })
+    }
+
+    useEffect(() => {
+        getCompanies();
+    }, []);
 
     return (
         <div className="flex flex-col">
@@ -49,7 +74,7 @@ export default function Company() {
                     <p>AdvCloud</p>
                 </div>
                 <div className="flex items-center gap-1">
-                    <Button variant="outline"   >Feedback</Button>
+                    <Button variant="outline">Feedback</Button>
                     <Button variant="ghost">Changelog</Button>
                     <Button variant="ghost">Help</Button>
                     <Button variant="ghost">Docs</Button>
@@ -187,7 +212,10 @@ export default function Company() {
                         <ListBulletIcon></ListBulletIcon>
                     </ToggleGroupItem>
                 </ToggleGroup>
-                <Dialog>
+                <Dialog
+                    open={openDialog}
+                    onOpenChange={setOpenDialog}
+                >
                     <DialogTrigger>
                         <Button>
                             Add New
@@ -200,20 +228,62 @@ export default function Company() {
                             <DialogDescription>
                                 Get started and manage your finances.
                             </DialogDescription>
-                            <CompanyCreation></CompanyCreation>
+                            <CompanyCreation
+                                closeDialog={() => {
+                                    setOpenDialog(false);
+                                    getCompanies();
+                                }}
+                            ></CompanyCreation>
                         </DialogHeader>
                     </DialogContent>
                 </Dialog>
             </div>
             {
                 defLayout === "grid" ? (
-                    <div className="grid px-[8%] grid-flow-col w-[100%] grid-cols-3 p-4 gap-4">
-                        <CompanyCard/>
+                    <div className="grid px-[8%] w-[100%] grid-cols-3 p-4 gap-4">
+                        {
+                            companies?.documents.map((data) => {
+                                return <CompanyCard
+                                    companyName={data['company_name']}
+                                    companyId={data['company_id']}
+                                    onDelete={(value) => {
+
+                                    }}
+                                    financialYear={
+                                        `${format(new Date(data['book_begins']), "yyyy")}`
+                                        + " - " +
+                                        `${format(new Date(data['book_ends']), "yyyy")}`
+                                    }
+                                    companyLogoUrl={"https://vercel.com/api/www/avatar?u=abhi4529&s=44"}
+                                    totalSale={"0"}
+                                    lastWorked={format(new Date(), "dd - MM - yy")}
+                                />
+                            })
+                        }
                     </div>
 
                 ) : (
                     <div className={"flex flex-col px-[8%] w-[100%] p-4 gap-4"}>
-                        <CompanyCard style={"list"}/>
+                        {
+                            companies?.documents.map((data) => {
+                                return <CompanyCard
+                                    companyName={data['company_name']}
+                                    style={"list"}
+                                    companyId={data['company_id']}
+                                    onDelete={(value) => {
+                                        getCompanies();
+                                    }}
+                                    financialYear={
+                                        `${format(new Date(data['book_begins']), "yyyy")}`
+                                        + " - " +
+                                        `${format(new Date(data['book_ends']), "yyyy")}`
+                                    }
+                                    companyLogoUrl={"https://vercel.com/api/www/avatar?u=abhi4529&s=44"}
+                                    totalSale={"0"}
+                                    lastWorked={format(new Date(), "dd - MM - yy")}
+                                />
+                            })
+                        }
                     </div>
                 )
             }
