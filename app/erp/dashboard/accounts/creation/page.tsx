@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -6,13 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import {
   Command,
   CommandGroup,
@@ -43,113 +38,127 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DotsVerticalIcon } from "@radix-ui/react-icons";
+import {CaretRightIcon, DotsVerticalIcon} from "@radix-ui/react-icons";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { BiSolidSave } from "react-icons/bi";
 
 import * as z from "zod";
+import {accountGroups} from "@/app/utils/account-groups";
+import {useRouter} from "next/navigation";
 
-export function AccountCreation() {
+export default function AccountCreation() {
+    const router = useRouter();
   return (
-    <div className="flex flex-col h-[100%] justify-between">
-      <div className="flex gap-2">
-        <div className="flex flex-col w-[100%]">
-          <Card>
-            <CardContent className="flex flex-col w-[100%] h-[100%] justify-center p-3">
-              <p className="text-slate-500 text-xs font-bold mb-2">
-                Account Details
-              </p>
-              <AccountDetails></AccountDetails>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="flex flex-col w-[100%]">
-          <Card>
-            <CardContent className="flex w-[100%] flex-col h-[100%] justify-center p-3">
-              <p className="text-slate-500 text-xs font-bold mb-2">
-                Tax Details{" "}
-              </p>
-              <TaxDetails></TaxDetails>
-            </CardContent>
-          </Card>
-          <AccountOptions></AccountOptions>
-        </div>
+      <div className={"flex flex-col"} onKeyDown={(e)=>{
+          if(e.key === "Escape"){
+              router.back();
+          }
+      }}>
+          <div className={"flex p-3 py-2 border-b w-[100%] justify-between items-center"}>
+              <div className={"flex gap-2 items-center"}>
+                  <Button variant={"link"} className={"page-header p-0"} onClick={()=>router.back()}>
+                      Accounts
+                  </Button>
+                  <CaretRightIcon className={"page-header animation-delay-50"}/>
+                  <p className={"page-header animation-delay-100 text-sm"}>Account Creation</p>
+              </div>
+              <Button variant={"default"}>
+                  Save
+                  <BiSolidSave className="ml-2"></BiSolidSave>
+              </Button>
+          </div>
+          <div className="page-transition overflow-hidden flex flex-col h-[100%] justify-between p-3">
+              <div className="flex gap-2">
+                  <div className="flex flex-col w-[100%]">
+                      <Card>
+                          <CardContent className="flex flex-col w-[100%] h-[100%] justify-center p-3">
+                              <p className="text-slate-500 text-xs font-bold mb-2">
+                                  Account Details
+                              </p>
+                              <AccountDetails></AccountDetails>
+                          </CardContent>
+                      </Card>
+                  </div>
+                  <div className="flex flex-col w-[100%]">
+                      <Card>
+                          <CardContent className="flex w-[100%] flex-col h-[100%] justify-center p-3">
+                              <p className="text-slate-500 text-xs font-bold mb-2">
+                                  Tax Details{" "}
+                              </p>
+                              <TaxDetails></TaxDetails>
+                          </CardContent>
+                      </Card>
+                      <AccountOptions></AccountOptions>
+                  </div>
+              </div>
+              <div className="flex justify-end gap-2 items-end mt-3">
+                  <div className="flex">
+                      <Button variant={"link"}>Search GST</Button>
+                      <Button variant={"link"}>Bank Details</Button>
+                      <Button variant={"link"}>
+                          More Details
+                      </Button>
+                  </div>
+              </div>
+          </div>
       </div>
-      <div className="flex justify-end gap-2 items-end mt-3">
-        <div className="flex">
-          <Button variant={"link"}>Search GST</Button>
-          <Button variant={"link"}>Bank Details</Button>
-          <Button variant={"link"}>
-            More Details
-          </Button>
-        </div>
-        <Button variant={"default"}>
-          Save
-          <BiSolidSave className="ml-2"></BiSolidSave>
-        </Button>
-      </div>
-    </div>
   );
 }
 
 const accountSchema = z.object({
-  accountName: z.string().min(3).max(50),
-  accountGroup: z.string(),
-  accountOpBal: z.number(),
-  accountCategory: z.string(),
-  address: z.string(),
-  state: z.string(),
-  city: z.string(),
-  pincode: z.string(),
-  route: z.string(),
-  contact: z.string(),
-  email: z.string(),
-  regType: z.string(),
-  gstIn: z.string(),
-  panIn: z.string(),
-  drugLic: z.string(),
-  tdsApplicable: z.boolean(),
-  eCom: z.boolean(),
-  isTransporter: z.boolean(),
-  shippingAddress: z.string(),
+    accountName: z.string().min(3).max(50),
+    accountGroup: z.string(),
+    accountOpBal: z.number(),
+    accountCategory: z.string(),
+    address: z.string(),
+    state: z.string(),
+    city: z.string(),
+    pincode: z.string(),
+    route: z.string(),
+    contact: z.string(),
+    email: z.string(),
+    regType: z.string(),
+    gstIn: z.string(),
+    panIn: z.string(),
+    drugLic: z.string(),
+    tdsApplicable: z.boolean(),
+    eCom: z.boolean(),
+    isTransporter: z.boolean(),
+    shippingAddress: z.string(),
 });
 
-const accountGroups = [
-  "Sundry Debtors",
-  "Sundry Credtors",
-  "Expenses",
-  "Bank Account",
-];
+
 
 export function AccountDetails() {
-  const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(false);
 
-  const form = useForm<z.infer<typeof accountSchema>>({
-    resolver: zodResolver(accountSchema),
-  });
+    const form = useForm<z.infer<typeof accountSchema>>({
+        resolver: zodResolver(accountSchema),
+    });
 
-  function onSubmit(values: z.infer<typeof accountSchema>) {
-    console.log(values);
-  }
+    function onSubmit(values: z.infer<typeof accountSchema>) {
+        console.log(values);
+    }
 
-  function capitalizeFirstLetter(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
+    function capitalizeFirstLetter(str: string): string {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
 
-  return (
-    <div className="flex flex-col w-[100%]">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-          <FormField
-            control={form.control}
-            name="accountName"
-            render={({ field }) => (
-              <FormItem className="w-[100%]">
-                <FormLabel>Account Name</FormLabel>
+    return (
+        <div className="flex flex-col w-[100%]">
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+                    <FormField
+                        control={form.control}
+                        name="accountName"
+                        render={({field}) => (
+                            <FormItem className="w-[100%]">
+                            <FormLabel>Account Name</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Advance Software Inc..."
+                    autoFocus={true}
                     {...field}
                   ></Input>
                 </FormControl>
@@ -178,7 +187,7 @@ export function AccountDetails() {
                     <PopoverContent className="p-0" side="bottom" align="start">
                       <Command>
                         <CommandInput />
-                        <CommandGroup>
+                        <CommandGroup className={"max-h-[200px] overflow-y-scroll"}>
                           {accountGroups.map((account) => (
                             <CommandItem
                               onSelect={(value) => {
