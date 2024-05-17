@@ -34,9 +34,9 @@ import {
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import {StorageService} from "@/utils/local-storage-service";
 import {ChevronRightIcon} from "@radix-ui/react-icons";
-import {minimalCompany} from "@/utils/interfaces/company-interface";
-import {DatabaseService} from "@/app/service/database-service";
+import {CompanyInterface, minimalCompany} from "@/utils/interfaces/company-interface";
 import {toast} from "sonner";
+import {DatabaseService} from "@/app/service/database-service";
 
 const companySchema = z.object({
     companyName: z.string().min(2).max(50),
@@ -149,8 +149,49 @@ export default function CompanyCreation({closeDialog} : {closeDialog: () => void
                                 company_pan: values['companyPan'],
                             }
 
+                            const company : CompanyInterface = {
+                                access_token: "",
+                                address: "",
+                                admin_password: "",
+                                api_endPoint: "",
+                                api_key: "",
+                                city: "",
+                                company_id: companyData.company_gst,
+                                data_freeze: "",
+                                emailId: "",
+                                enable_add_cost_purchase: false,
+                                enable_add_gst_cost_purchase: false,
+                                enable_auto_cs_to_pl: false,
+                                enable_auto_gst_reduction: false,
+                                enable_auto_receipt_generation: false,
+                                enable_auto_voucher_day: false,
+                                enable_auto_voucher_month: false,
+                                enable_gst_validation: false,
+                                enable_invoice_tracking: false,
+                                enable_ledger_allocations: false,
+                                enable_single_entry_mode: false,
+                                enable_stop_sale_cExceeds: false,
+                                enable_trash: false,
+                                enable_user_tracking: false,
+                                enable_zero_value_entries: false,
+                                gstIn: "",
+                                jurisdiction: "",
+                                mail_provider: "",
+                                panIn: "",
+                                primary_contact: "",
+                                reg_type: "",
+                                secondary_contact: "",
+                                sms_provider: "",
+                                state: "",
+                                user_id: localStorage.getItem("userId")!,
+                                company_name: companyData.company_name,
+                                company_alt : companyData.company_alias,
+                                book_begins: companyData.book_begins,
+                                book_ends: companyData.book_ends
+                            }
+
                             const userId = StorageService().readFromLocalStorage("user")['userId'];
-                            DatabaseService().createCompany(companyData, userId);
+                            DatabaseService().createCompany(company);
                             closeDialog();
                         }}
                     ></CompanyTaxInfo>

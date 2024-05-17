@@ -11,7 +11,6 @@ import { Button, buttonVariants } from "./button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Separator } from "./separator";
-import { usePathname } from "next/navigation";
 import {
   HiHome,
   HiOutlineDocument,
@@ -22,6 +21,7 @@ import { BsBoxes, BsInboxesFill, BsPeople } from "react-icons/bs";
 import { CiBoxes } from "react-icons/ci";
 import { useState } from "react";
 import { IoDocumentAttach, IoHome, IoPeople } from "react-icons/io5";
+import {usePathname} from "next/navigation";
 
 export function SideBar() {
   const [openMenu, setOpenMenu] = useState<boolean>(true);
@@ -71,7 +71,7 @@ export function SideBar() {
           <Link
             href={"/erp/dashboard/home"}
             className={
-              path.match("home")
+              path!!.match("home")
                 ? cn(
                     buttonVariants({ variant: "secondary" }) +
                       " justify-start gap-2"
@@ -88,7 +88,7 @@ export function SideBar() {
           <Link
             href={"/erp/dashboard/accounts"}
             className={
-              path.match("accounts")
+              path!.match("accounts")
                 ? cn(
                     buttonVariants({ variant: "secondary" }) +
                       " justify-start gap-2"
@@ -105,7 +105,7 @@ export function SideBar() {
           <Link
             href={"/erp/dashboard/stock"}
             className={
-              path.match("stock")
+              path!.match("stock")
                 ? cn(
                     buttonVariants({ variant: "secondary" }) +
                       " justify-start gap-2"
@@ -124,7 +124,7 @@ export function SideBar() {
           <Link
             href={"/erp/dashboard/invoicing"}
             className={
-              path.match("invoicing")
+              path!.match("invoicing")
                 ? cn(
                     buttonVariants({ variant: "secondary" }) +
                       " justify-start gap-2"
@@ -154,7 +154,7 @@ export function SideBar() {
           <Link
             href={"/erp/dashboard/home"}
             className={
-              path.match("home")
+              path!.match("home")
                 ? cn(buttonVariants({ variant: "secondary", size: "icon" }))
                 : cn(buttonVariants({ variant: "ghost", size: "icon" }))
             }
@@ -164,7 +164,7 @@ export function SideBar() {
           <Link
             href={"/erp/dashboard/accounts"}
             className={
-              path.match("accounts")
+              path!.match("accounts")
                 ? cn(buttonVariants({ variant: "secondary", size: "icon" }))
                 : cn(buttonVariants({ variant: "ghost", size: "icon" }))
             }
@@ -174,7 +174,7 @@ export function SideBar() {
           <Link
             href={"/erp/dashboard/stock"}
             className={
-              path.match("stock")
+              path!.match("stock")
                 ? cn(buttonVariants({ variant: "secondary", size: "icon" }))
                 : cn(buttonVariants({ variant: "ghost", size: "icon" }))
             }
@@ -185,7 +185,7 @@ export function SideBar() {
           <Link
             href={"/erp/dashboard/invoicing"}
             className={
-              path.match("invoicing")
+              path!.match("invoicing")
                 ? cn(buttonVariants({ variant: "secondary", size: "icon" }))
                 : cn(buttonVariants({ variant: "ghost", size: "icon" }))
             }

@@ -29,41 +29,48 @@ import {CompanyCard} from "@/components/ui/company-card";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {AiOutlineEdit, AiOutlineUser, AiOutlineUserAdd} from "react-icons/ai";
 import {HiLogout} from "react-icons/hi";
-import {IoAdd} from "react-icons/io5";
+import {IoAdd, IoFilter} from "react-icons/io5";
 import {StorageService} from "@/utils/local-storage-service";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
-import {DatabaseService} from "@/app/service/database-service";
 import {Models} from "appwrite";
 import format from "date-fns/format";
+import Loading from "@/app/loading";
 
 export default function Company() {
     const [defLayout, setDefLayout] = useState<string>("grid");
-    const [companies, setCompanies] = useState<Models.DocumentList<Models.Document>>()
+    const [companies, setCompanies] = useState<any>()
+    const [loading, setLoading] = useState(true);
     const {setTheme} = useTheme();
     const navigation = useRouter();
     const [openDialog, setOpenDialog] = useState<boolean>(false);
 
     function getCompanies() {
-        const userId = StorageService().readFromLocalStorage("user")['userId'];
-        const promise = DatabaseService().fetchCompanies(userId);
+        const userId = localStorage.getItem("userId");
 
-        toast.promise(promise,
-            {
-                loading: "Refreshing Companies",
-                success: (data) => {
-                    setCompanies(data);
-                    return "Success"
+        if (userId != null) {
+            const promise = fetch("/api/fetch-companies", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-                error: (error) => {
-                    return error
-                }
+                body: JSON.stringify({userId: userId})
             })
+
+            promise.then(async (response) => {
+                const d = await response.json();
+                setLoading(false);
+                setCompanies(d.companies);
+            })
+        } else {
+            toast.error("User Not Found !")
+        }
     }
 
     useEffect(() => {
         getCompanies();
     }, []);
+
 
     return (
         <div className="flex flex-col">
@@ -186,63 +193,69 @@ export default function Company() {
                     </Popover>
                 </div>
             </header>
-            <div
-                className="sticky top-0 flex px-[8%] pt-6 gap-2 pb-2 items-center justify-between z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <Input placeholder="Search...( Alt + Q )"></Input>
-                <ToggleGroup
-                    className="border rounded-md h-8"
-                    type="single"
-                    value={defLayout}
-                    onValueChange={(value) => {
-                        if (value) {
-                            setDefLayout(value)
-                        }
-                    }}
-                >
-                    <ToggleGroupItem
-                        className="h-8"
-                        value={"grid"}
+            {loading ?
+                <div className={"flex flex-col items-center justify-center h-full w-full"}>
+                    <Loading/>
+                </div> :
+                <div
+                    className="sticky top-0 flex px-[8%] pt-6 gap-2 pb-2 items-center justify-between z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                    <Input placeholder="Search...( Alt + Q )"></Input>
+                    <ToggleGroup
+                        className="border rounded-md h-8"
+                        type="single"
+                        value={defLayout}
+                        onValueChange={(value) => {
+                            if (value) {
+                                setDefLayout(value)
+                            }
+                        }}
                     >
-                        <GridIcon></GridIcon>
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                        className="h-8"
-                        value="list"
+                        <ToggleGroupItem
+                            className="h-8"
+                            value={"grid"}
+                        >
+                            <GridIcon></GridIcon>
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                            className="h-8"
+                            value="list"
+                        >
+                            <ListBulletIcon></ListBulletIcon>
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                    <Button variant={"outline"}>
+                        <IoFilter/>
+                    </Button>
+                    <Dialog
+                        open={openDialog}
+                        onOpenChange={setOpenDialog}
                     >
-                        <ListBulletIcon></ListBulletIcon>
-                    </ToggleGroupItem>
-                </ToggleGroup>
-                <Dialog
-                    open={openDialog}
-                    onOpenChange={setOpenDialog}
-                >
-                    <DialogTrigger>
-                        <Button>
-                            Add New
-                            <PlusIcon className="ml-2"></PlusIcon>
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Create Company</DialogTitle>
-                            <DialogDescription>
-                                Get started and manage your finances.
-                            </DialogDescription>
-                            <CompanyCreation
-                                closeDialog={() => {
-                                    setOpenDialog(false);
-                                    getCompanies();
-                                }}
-                            ></CompanyCreation>
-                        </DialogHeader>
-                    </DialogContent>
-                </Dialog>
-            </div>
+                        <DialogTrigger>
+                            <Button>
+                                Add New
+                                <PlusIcon className="ml-2"></PlusIcon>
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create Company</DialogTitle>
+                                <DialogDescription>
+                                    Get started and manage your finances.
+                                </DialogDescription>
+                                <CompanyCreation
+                                    closeDialog={() => {
+                                        setOpenDialog(false);
+                                    }}
+                                ></CompanyCreation>
+                            </DialogHeader>
+                        </DialogContent>
+                    </Dialog>
+                </div>}
             {
                 defLayout === "grid" ? (
                     <div className="grid px-[8%] w-[100%] grid-cols-3 p-4 gap-4">
                         {
-                            companies?.documents.map((data) => {
+                            companies?.map((data: any) => {
                                 return <CompanyCard
                                     companyName={data['company_name']}
                                     companyId={data['company_id']}
@@ -265,13 +278,12 @@ export default function Company() {
                 ) : (
                     <div className={"flex flex-col px-[8%] w-[100%] p-4 gap-4"}>
                         {
-                            companies?.documents.map((data) => {
+                            companies?.map((data: any) => {
                                 return <CompanyCard
                                     companyName={data['company_name']}
                                     style={"list"}
                                     companyId={data['company_id']}
                                     onDelete={(value) => {
-                                        getCompanies();
                                     }}
                                     financialYear={
                                         `${format(new Date(data['book_begins']), "yyyy")}`

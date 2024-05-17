@@ -5,13 +5,14 @@ import {Dialog, DialogContent, DialogTrigger} from "./dialog";
 import {Button, buttonVariants} from "./button";
 import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem} from "./command";
 import {Separator} from "@/components/ui/separator";
-import {IoNotifications, IoSettings} from "react-icons/io5";
+import {IoInformation, IoNotifications, IoSettings} from "react-icons/io5";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {Card, CardHeader, CardTitle} from "@/components/ui/card";
 import {FaFileInvoice} from "react-icons/fa";
 import {useTheme} from "next-themes";
 import {BsShop} from "react-icons/bs";
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
+import {HoverCard, HoverCardContent, HoverCardTrigger} from "@/components/ui/hover-card";
 
 export default function DashboardHeader() {
 
@@ -43,6 +44,16 @@ export default function DashboardHeader() {
                         </Command>
                     </DialogContent>
                 </Dialog>
+                <HoverCard>
+                    <HoverCardTrigger>
+                        <Button variant={"secondary"} size={"icon"}>
+                            <IoInformation/>
+                        </Button>
+                    </HoverCardTrigger>
+                    <HoverCardContent>
+
+                    </HoverCardContent>
+                </HoverCard>
                 <Popover>
                     <PopoverTrigger>
                         <Button variant={"secondary"} size={"icon"}>

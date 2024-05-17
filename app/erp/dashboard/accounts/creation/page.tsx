@@ -1,455 +1,260 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import {Button, buttonVariants} from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription, CardFooter,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
+    Command,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
 } from "@/components/ui/command";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import {Input} from "@/components/ui/input";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {Separator} from "@/components/ui/separator";
+import {Switch} from "@/components/ui/switch";
+import {cn} from "@/lib/utils";
+import {zodResolver} from "@hookform/resolvers/zod";
 import {CaretRightIcon, DotsVerticalIcon} from "@radix-ui/react-icons";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { BiSolidSave } from "react-icons/bi";
+import {useState} from "react";
+import {useForm} from "react-hook-form";
+import {BiSolidSave} from "react-icons/bi";
 
 import * as z from "zod";
 import {accountGroups} from "@/app/utils/account-groups";
 import {useRouter} from "next/navigation";
+import {accountSchema, addressSchema} from "@/app/form-schemas/account-schemas";
+import {Combobox} from "@/components/ui/combobox";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription, DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
+} from "@/components/ui/dialog";
+import {IoAdd} from "react-icons/io5";
+import {DialogBody} from "next/dist/client/components/react-dev-overlay/internal/components/Dialog";
+import {statesAndCodes} from "@/app/utils/address-states";
+import {ScrollArea} from "@/components/ui/scroll-area";
+import {Address} from "@/app/types/account-type";
+import {Label} from "@/components/ui/label";
+import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group";
 
 export default function AccountCreation() {
     const router = useRouter();
-  return (
-      <div className={"flex flex-col"} onKeyDown={(e)=>{
-          if(e.key === "Escape"){
-              router.back();
-          }
-      }}>
-          <div className={"flex p-3 py-2 border-b w-[100%] justify-between items-center"}>
-              <div className={"flex gap-2 items-center"}>
-                  <Button variant={"link"} className={"page-header p-0"} onClick={()=>router.back()}>
-                      Accounts
-                  </Button>
-                  <CaretRightIcon className={"page-header animation-delay-50"}/>
-                  <p className={"page-header animation-delay-100 text-sm"}>Account Creation</p>
-              </div>
-              <Button variant={"default"}>
-                  Save
-                  <BiSolidSave className="ml-2"></BiSolidSave>
-              </Button>
-          </div>
-          <div className="page-transition overflow-hidden flex flex-col h-[100%] justify-between p-3">
-              <div className="flex gap-2">
-                  <div className="flex flex-col w-[100%]">
-                      <Card>
-                          <CardContent className="flex flex-col w-[100%] h-[100%] justify-center p-3">
-                              <p className="text-slate-500 text-xs font-bold mb-2">
-                                  Account Details
-                              </p>
-                              <AccountDetails></AccountDetails>
-                          </CardContent>
-                      </Card>
-                  </div>
-                  <div className="flex flex-col w-[100%]">
-                      <Card>
-                          <CardContent className="flex w-[100%] flex-col h-[100%] justify-center p-3">
-                              <p className="text-slate-500 text-xs font-bold mb-2">
-                                  Tax Details{" "}
-                              </p>
-                              <TaxDetails></TaxDetails>
-                          </CardContent>
-                      </Card>
-                      <AccountOptions></AccountOptions>
-                  </div>
-              </div>
-              <div className="flex justify-end gap-2 items-end mt-3">
-                  <div className="flex">
-                      <Button variant={"link"}>Search GST</Button>
-                      <Button variant={"link"}>Bank Details</Button>
-                      <Button variant={"link"}>
-                          More Details
-                      </Button>
-                  </div>
-              </div>
-          </div>
-      </div>
-  );
+    return (
+        <div className={"flex h-full flex-col"}>
+            <div className={"flex p-3 py-2 border-b w-[100%] justify-between items-center"}>
+                <div className={"flex gap-2 items-center"}>
+                    <Button variant={"link"} className={"page-header p-0"} onClick={() => router.back()}>
+                        Accounts
+                    </Button>
+                    <CaretRightIcon className={"page-header animation-delay-50"}/>
+                    <p className={"page-header animation-delay-100 text-sm"}>Account Creation</p>
+                </div>
+                <Button variant={"default"}>
+                    Save
+                    <BiSolidSave className="ml-2"></BiSolidSave>
+                </Button>
+            </div>
+            <div className="page-transition overflow-hidden flex flex-col h-[100%] justify-between p-3">
+                <div className="flex h-[100%] gap-2">
+                    <AccountForm/>
+                </div>
+            </div>
+        </div>
+    );
 }
 
-const accountSchema = z.object({
-    accountName: z.string().min(3).max(50),
-    accountGroup: z.string(),
-    accountOpBal: z.number(),
-    accountCategory: z.string(),
-    address: z.string(),
-    state: z.string(),
-    city: z.string(),
-    pincode: z.string(),
-    route: z.string(),
-    contact: z.string(),
-    email: z.string(),
-    regType: z.string(),
-    gstIn: z.string(),
-    panIn: z.string(),
-    drugLic: z.string(),
-    tdsApplicable: z.boolean(),
-    eCom: z.boolean(),
-    isTransporter: z.boolean(),
-    shippingAddress: z.string(),
-});
 
+function AccountForm() {
+    6
+    return (
+        <div className={"flex gap-3 h-[100%] w-full"}>
+            <Card className={"w-full"}>
+                <CardHeader>
+                    <CardDescription>
+                        Account Details
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className={"flex flex-col gap-3"}>
+                    <div className={"flex flex-col gap-1.5"}>
+                        <Label>Account Name</Label>
+                        <Input required/>
+                    </div>
+                    <div className={"flex flex-col gap-1.5 w-[60%]"}>
+                        <Label>Account Group</Label>
+                        <Combobox options={[...accountGroups]} selected={""}/>
+                    </div>
+                    <div className={"p-3 border rounded-lg flex flex-col  gap-1.5"}>
+                        <Label>Op. balance</Label>
+                        <div className={"flex gap-1"}>
+                            <Input placeholder={"As On 01-04-2024"}/>
+                            <ToggleGroup type={"single"} className={"border rounded-md h-8 px-[2px]"}>
+                                <ToggleGroupItem value={"Db"} className={"h-7"}>
+                                    Db
+                                </ToggleGroupItem>
+                                <ToggleGroupItem value={"Cr"} className={"h-7"}>
+                                    Cr
+                                </ToggleGroupItem>
+                            </ToggleGroup>
+                        </div>
+                    </div>
+                    <Dialog>
+                        <DialogTrigger className={"w-full"}>
+                            <Button className={"w-full gap-3 font-normal justify-start"} variant={"outline"}>
+                                <IoAdd/>
+                                Add Address
+                            </Button>
+                        </DialogTrigger>
+                        <AddressForm/>
+                    </Dialog>
+                </CardContent>
+            </Card>
+            <div className={"flex flex-col gap-3 w-full"}>
+                <Card className={"w-full"}>
+                    <CardHeader>
+                        <CardDescription>
+                            Tax Details
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className={"flex flex-col gap-3"}>
+                        <div className={"flex flex-col gap-1.5 w-[60%]"}>
+                            <Label>Registration Type</Label>
+                            <Combobox options={[
+                                {
+                                    label: "Regular",
+                                    value: "regular"
+                                },
+                                {
+                                    label: "UnRegistered",
+                                    value: "unregistered"
+                                },
+                                {
+                                    label: "Composition",
+                                    value: "composition"
+                                }
 
+                            ]} selected={""}/>
+                        </div>
+                        <div className={"flex flex-col gap-1.5"}>
+                            <Label>GST Number</Label>
+                            <Input required/>
+                        </div>
+                        <div className={"flex justify-end"}>
+                            <Button className={"px-0"} variant={"link"} size={"sm"}>
+                                Add Licenses
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    )
+}
 
-export function AccountDetails() {
-    const [open, setOpen] = useState(false);
-
-    const form = useForm<z.infer<typeof accountSchema>>({
-        resolver: zodResolver(accountSchema),
+function AddressForm({onDataSubmit}: { onDataSubmit?: (values: Address) => void }) {
+    const form = useForm<z.infer<typeof addressSchema>>({
+        resolver: zodResolver(addressSchema),
     });
 
-    function onSubmit(values: z.infer<typeof accountSchema>) {
-        console.log(values);
-    }
-
-    function capitalizeFirstLetter(str: string): string {
-        return str.charAt(0).toUpperCase() + str.slice(1);
+    function onSubmit(values: z.infer<typeof addressSchema>) {
+        const address = values as Address;
+        onDataSubmit && onDataSubmit(address);
+        form.reset();
     }
 
     return (
-        <div className="flex flex-col w-[100%]">
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-                    <FormField
-                        control={form.control}
-                        name="accountName"
-                        render={({field}) => (
-                            <FormItem className="w-[100%]">
-                            <FormLabel>Account Name</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Advance Software Inc..."
-                    autoFocus={true}
-                    {...field}
-                  ></Input>
-                </FormControl>
-                <FormMessage></FormMessage>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="accountGroup"
-            render={({ field }) => (
-              <FormItem className="w-[100%] flex flex-col gap-0.5 justify-start">
-                <FormLabel>Account Group</FormLabel>
-                <FormControl>
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger className="h-8">
-                      <div
-                        className={cn(
-                          buttonVariants({ variant: "outline" }) +
-                            " w-[100%] justify-start font-normal text-sm"
-                        )}
-                      >
-                        {field.value === "" ? "Select Group" : field.value}
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0" side="bottom" align="start">
-                      <Command>
-                        <CommandInput />
-                        <CommandGroup className={"max-h-[200px] overflow-y-scroll"}>
-                          {accountGroups.map((account) => (
-                            <CommandItem
-                              onSelect={(value) => {
-                                field.onChange(capitalizeFirstLetter(value));
-                                setOpen(false);
-                              }}
-                            >
-                              {account}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-                <FormMessage></FormMessage>
-              </FormItem>
-            )}
-          />
-          <div className="flex gap-2 items-end">
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem className="w-[100%]">
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Shop 40, At Post..." {...field}></Input>
-                  </FormControl>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                <div className={buttonVariants({ variant: "outline" })}>
-                  <DotsVerticalIcon></DotsVerticalIcon>
+        <DialogContent>
+            <DialogHeader>
+                <DialogDescription>
+                    Account Address
+                </DialogDescription>
+            </DialogHeader>
+            <DialogBody>
+                <div className={"flex flex-col gap-3"}>
+                    <div className={"flex flex-col gap-1.5 w-[60%]"}>
+                        <Label>
+                            Address Type
+                        </Label>
+                        <Input placeholder={"Office, Billing, Shipping..."}/>
+                    </div>
+                    <div className={"flex flex-col gap-1.5"}>
+                        <Label>
+                            Address
+                        </Label>
+                        <Input/>
+                    </div>
+                    <div className={"flex gap-3"}>
+                        <div className={"flex flex-col gap-1.5 w-[60%]"}>
+                            <Label>
+                                State
+                            </Label>
+                            <Combobox options={statesAndCodes.map((e) => {
+                                return {
+                                    value: e.state,
+                                    label: e.state
+                                }
+                            })} selected={""}/>
+                        </div>
+                        <div className={"flex flex-col gap-1.5"}>
+                            <Label>
+                                City
+                            </Label>
+                            <Input/>
+                        </div>
+                    </div>
+                    <div className={"flex gap-3"}>
+                        <div className={"flex flex-col gap-1.5 w-[80%]"}>
+                            <Label>
+                                Village
+                            </Label>
+                            <Input/>
+                        </div>
+                        <div className={"flex flex-col gap-1.5 w-[80%]"}>
+                            <Label>
+                                Pin Code
+                            </Label>
+                            <Input/>
+                        </div>
+                        <div className={"flex flex-col gap-1.5"}>
+                            <Label>
+                                Route
+                            </Label>
+                            <Input/>
+                        </div>
+                    </div>
                 </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Add Shipping Address</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="flex gap-2">
-            <FormField
-              control={form.control}
-              name="pincode"
-              render={({ field }) => (
-                <FormItem className="w-[100%]">
-                  <FormLabel>PinCode</FormLabel>
-                  <FormControl>
-                    <Input placeholder="440018" {...field}></Input>
-                  </FormControl>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="route"
-              render={({ field }) => (
-                <FormItem className="w-[100%]">
-                  <FormLabel>Route</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enz..." {...field}></Input>
-                  </FormControl>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="flex gap-2">
-            <FormField
-              control={form.control}
-              name="state"
-              render={({ field }) => (
-                <FormItem className="w-[100%]">
-                  <FormLabel>State</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Maharashtra..." {...field}></Input>
-                  </FormControl>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem className="w-[100%]">
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nagpur..." {...field}></Input>
-                  </FormControl>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem className="w-[100%]">
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="advance@gmail.com" {...field}></Input>
-                  </FormControl>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="contact"
-              render={({ field }) => (
-                <FormItem className="w-[50%] mb-2">
-                  <FormLabel>Contact</FormLabel>
-                  <FormControl>
-                    <Input placeholder="9XXXXXXXXX..." {...field}></Input>
-                  </FormControl>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
-        </form>
-      </Form>
-    </div>
-  );
-}
-
-const regTypes = ["Regular", "Composite", "Cancelled", "UnRegistered"];
-
-export function TaxDetails() {
-  const [open, setOpen] = useState(false);
-
-  const form = useForm<z.infer<typeof accountSchema>>({
-    resolver: zodResolver(accountSchema),
-  });
-
-  function onSubmit(values: z.infer<typeof accountSchema>) {
-    console.log(values);
-  }
-
-  function capitalizeFirstLetter(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-  return (
-    <div className="flex flex-col">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <FormField
-            control={form.control}
-            name="regType"
-            render={({ field }) => (
-              <FormItem className="w-[200px] flex flex-col gap-0.5">
-                <FormLabel>Registration Type</FormLabel>
-                <FormControl>
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger className="h-8">
-                      <div
-                        className={cn(
-                          buttonVariants({ variant: "outline" }) +
-                            " w-[100%] justify-start font-normal text-sm"
-                        )}
-                      >
-                        {field.value === "" ? "Select Group" : field.value}
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0" side="right" align="start">
-                      <Command>
-                        <CommandInput />
-                        <CommandGroup>
-                          {regTypes.map((type) => (
-                            <CommandItem
-                              onSelect={(value) => {
-                                field.onChange(capitalizeFirstLetter(value));
-                                setOpen(false);
-                              }}
-                            >
-                              {type}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-                <FormMessage></FormMessage>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="gstIn"
-            render={({ field }) => (
-              <FormItem className="w-[100%] mt-2">
-                <FormLabel>GST Number</FormLabel>
-                <FormControl>
-                  <Input {...field}></Input>
-                </FormControl>
-                <FormMessage></FormMessage>
-              </FormItem>
-            )}
-          />
-          <div className="flex justify-end mt-2">
-            <Button variant={"link"} className="p-0 h-3 mt-2">
-              Add Licenses
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
-  );
-}
-
-export function AccountOptions() {
-  const form = useForm<z.infer<typeof accountSchema>>({
-    resolver: zodResolver(accountSchema),
-  });
-
-  return (
-    <div className="flex flex-col gap-2 mt-2 h-[100%]">
-      <Card className="h-[100%]">
-        <CardHeader className="p-3">
-          <div className="flex justify-between items-center h-[100%]">
-            <div className="flex flex-col gap-0.5">
-              <CardTitle className="text-sm">Interest Calculations</CardTitle>
-              <CardDescription>Apply interest to this ledger</CardDescription>
-            </div>
-            <Switch></Switch>
-          </div>
-        </CardHeader>
-      </Card>
-      <Card className="h-[100%]">
-        <CardHeader className="p-3 h-[100%]">
-          <div className="flex justify-between items-center h-[100%]">
-            <div className="flex flex-col gap-0.5">
-              <CardTitle className="text-sm">Stop Invoicing</CardTitle>
-              <CardDescription>
-                No invoicing will be applied to this account
-              </CardDescription>
-            </div>
-            <Switch></Switch>
-          </div>
-        </CardHeader>
-      </Card>
-      <Card className="h-[100%]">
-        <CardHeader className="p-3 h-[100%]">
-          <div className="flex justify-between items-center h-[100%]">
-            <div className="flex flex-col">
-              <CardTitle className="text-sm">Transporter</CardTitle>
-              <CardDescription>This account is a transporter</CardDescription>
-            </div>
-            <Switch></Switch>
-          </div>
-        </CardHeader>
-      </Card>
-    </div>
-  );
+            </DialogBody>
+            <DialogFooter className={"mt-4"}>
+                <Button variant={"secondary"}>
+                    Add Address
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    );
 }

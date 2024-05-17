@@ -22,7 +22,7 @@ export default function DashboardLayout({
             <DashboardHeader></DashboardHeader>
             <div className="flex h-[100%]">
                 <SideBar></SideBar>
-                <div className="flex flex-col w-[100%]">{children}</div>
+                <div className="flex flex-col h-full w-[100%]">{children}</div>
             </div>
         </div>
         </body>

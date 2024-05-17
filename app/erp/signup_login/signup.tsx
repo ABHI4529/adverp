@@ -11,6 +11,7 @@ import {Separator} from "@/components/ui/separator";
 import {IoLogoApple, IoLogoGoogle} from "react-icons/io";
 import {ImCheckboxUnchecked, ImFacebook} from "react-icons/im";
 import {IoCheckbox} from "react-icons/io5";
+import {useRouter} from "next/navigation";
 
 export function SignUpCard() {
     const [openTipTool, setOpenTipTool] = useState<boolean>(false);
@@ -19,11 +20,14 @@ export function SignUpCard() {
     const [passwordStrength, setPasswordStrength] = useState<number>(0);
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const router = useRouter();
 
     useEffect(checkPasswordStrength, [password])
 
     function handelSignUp() {
-        Auth().createAccount(email, password, confirmPassword);
+        Auth().createAccount(email, password, confirmPassword, () => {
+            router.push("/erp/company");
+        });
     }
 
     function checkPasswordStrength() {

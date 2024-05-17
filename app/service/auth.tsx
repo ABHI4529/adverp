@@ -2,11 +2,14 @@ import {client} from "@/app/service/client";
 import {Account, AppwriteException, ID} from "appwrite";
 import {toast} from "sonner"
 import {usePathname, useRouter} from "next/navigation";
+import {UserType} from "@/app/types/user_type";
+import {auth} from "@/app/service/firebase-service";
+import {createUserWithEmailAndPassword} from "@firebase/auth";
 
 
 export const Auth = () => {
     return {
-        createAccount: (email: string, password: string, confirmPassword: string) => {
+        createAccount: (email: string, password: string, confirmPassword: string, onSuccess: () => void) => {
             if (email === "" || password === "") {
                 toast.error(
                     "Invalid Data",
@@ -41,26 +44,42 @@ export const Auth = () => {
                     }
                 )
             } else {
-                const account = new Account(client);
 
                 try {
-                    const promise = account.create(
-                        ID.unique(),
-                        email,
-                        password
-                    )
-                    toast.promise(promise,
-                        {
-                            loading: "Creating Account",
-                            success: (data) => {
+                    const promise = createUserWithEmailAndPassword(auth, email, password)
+                    toast.message("Creating account...")
+                    promise.then((data) => {
+                        if (data != null) {
+                            const user: UserType = {
+                                id: data.user.uid,
+                                name: data.user!.displayName!,
+                                email: data.user.email!,
+                                created_at: new Date()
+                            }
 
-                                return "Account Created Successfully"
-                            },
-                            error: error => {
-                                return `${error}`
-                            },
+                            const save = fetch("/api/create-user", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify(user)
+                            });
+
+                            toast.promise(save, {
+                                loading: "Creating account.",
+                                success: (value) => {
+                                    localStorage.setItem("userId", user.id);
+                                    onSuccess();
+                                    return "Account created successfully."
+                                },
+                                error: error => {
+                                    return `${error}`
+                                }
+                            })
                         }
-                    )
+                    }).catch((e) => {
+                        toast.error(`${e}`)
+                    });
                 } catch (error: any) {
                     toast.error(`${error}`);
                 }
@@ -94,8 +113,6 @@ export const Auth = () => {
                 const account = new Account(client);
 
                 try {
-
-
                     const promise = account.createEmailSession(
                         email,
                         password
