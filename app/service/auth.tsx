@@ -4,7 +4,8 @@ import {toast} from "sonner"
 import {usePathname, useRouter} from "next/navigation";
 import {UserType} from "@/app/types/user_type";
 import {auth} from "@/app/service/firebase-service";
-import {createUserWithEmailAndPassword} from "@firebase/auth";
+import {createUserWithEmailAndPassword, signInWithEmailAndPassword} from "@firebase/auth";
+import {sign} from "node:crypto";
 
 
 export const Auth = () => {
@@ -86,7 +87,7 @@ export const Auth = () => {
             }
         },
 
-        loginEmail: async (email: string, password: string) => {
+        loginEmail: async (email: string, password: string, onSuccess : () => void) => {
             if (email == "" || password == "") {
                 toast.error(
                     "Invalid Data",
@@ -110,17 +111,14 @@ export const Auth = () => {
                     }
                 )
             } else {
-                const account = new Account(client);
-
                 try {
-                    const promise = account.createEmailSession(
-                        email,
-                        password
-                    )
+                    const promise = signInWithEmailAndPassword(auth, email, password);
                     toast.promise(promise,
                         {
                             loading: "Logging In.",
                             success: (data) => {
+                                localStorage.setItem("userId", data.user.uid);
+                                onSuccess();
                                 return "Logged in successfully."
                             },
                             error: error => {

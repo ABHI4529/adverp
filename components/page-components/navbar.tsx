@@ -34,7 +34,7 @@ export default function Navbar(){
                     </Link>
                     <Link
                         className={buttonVariants({className: "w-[150px]"})}
-                        href={"/erp/company"}>
+                        href={"/erp/signup_login"}>
                         Login
                     </Link>
                 </div>

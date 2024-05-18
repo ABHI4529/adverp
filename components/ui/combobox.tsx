@@ -97,8 +97,8 @@ export function Combobox({
     };
 
     return (
-        <HoverCard open={open} onOpenChange={setOpen}>
-            <HoverCardTrigger>
+        <HoverCard  open={open} onOpenChange={setOpen}>
+            <HoverCardTrigger asChild>
                 <Input
                     placeholder={placeholder}
                     value={query}

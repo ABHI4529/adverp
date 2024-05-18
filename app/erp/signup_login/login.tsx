@@ -21,7 +21,7 @@ export function LoginCard() {
         <Card className={"w-[465px]"}>
             <CardHeader>
                 <CardTitle>
-                    Welcome Back.
+                    Welcome Back !
                 </CardTitle>
                 <CardDescription>
                     Login and resume your work right away.
@@ -58,11 +58,9 @@ export function LoginCard() {
                 <div className={"flex flex-col w-[100%] justify-center items-center"}>
                     <Button className={"w-[120px]"}
                             onClick={async () => {
-                                await Auth().loginEmail(email, password).then((value) => {
-                                    StorageService().saveToLocalStorage("user", value);
+                                await Auth().loginEmail(email, password, () => {
                                     navigation.push('/erp/company');
                                 });
-
                             }}
                     >Login</Button>
                     <Separator className={"my-4"}></Separator>

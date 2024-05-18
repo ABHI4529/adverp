@@ -1,11 +1,11 @@
 export interface Address {
     label : string;
     address: string;
-    village: string;
-    city: string;
-    state: string;
-    pinCode: string;
-    route: string;
+    village?: string;
+    city?: string;
+    state?: string;
+    pinCode?: string;
+    route?: string;
 }
 
 export interface Licenses {

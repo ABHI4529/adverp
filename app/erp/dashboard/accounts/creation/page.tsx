@@ -41,7 +41,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {CaretRightIcon, DotsVerticalIcon} from "@radix-ui/react-icons";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
-import {BiSolidSave} from "react-icons/bi";
+import {BiCurrentLocation, BiRupee, BiSolidSave} from "react-icons/bi";
 
 import * as z from "zod";
 import {accountGroups} from "@/app/utils/account-groups";
@@ -56,16 +56,24 @@ import {
     DialogTitle,
     DialogTrigger
 } from "@/components/ui/dialog";
-import {IoAdd} from "react-icons/io5";
+import {IoAdd, IoLocate, IoLocation, IoLocationOutline, IoPencil, IoTrash} from "react-icons/io5";
 import {DialogBody} from "next/dist/client/components/react-dev-overlay/internal/components/Dialog";
 import {statesAndCodes} from "@/app/utils/address-states";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {Address} from "@/app/types/account-type";
 import {Label} from "@/components/ui/label";
 import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group";
+import {FaRupeeSign} from "react-icons/fa";
+import {toast} from "sonner";
+import {IoIosBuild, IoIosHome} from "react-icons/io";
+import {MdLocationOn} from "react-icons/md";
+import SearchGstIn from "@/app/erp/dashboard/accounts/creation/search-gst";
+import MoreSettings from "@/app/erp/dashboard/accounts/creation/more-settings";
+import BankDetails from "@/app/erp/dashboard/accounts/creation/bank-details";
 
 export default function AccountCreation() {
     const router = useRouter();
+
     return (
         <div className={"flex h-full flex-col"}>
             <div className={"flex p-3 py-2 border-b w-[100%] justify-between items-center"}>
@@ -92,7 +100,8 @@ export default function AccountCreation() {
 
 
 function AccountForm() {
-    6
+    const [addresses, setAddresses] = useState<Address[]>();
+    const [openAddress, setOpenAddress] = useState<boolean>(false);
     return (
         <div className={"flex gap-3 h-[100%] w-full"}>
             <Card className={"w-full"}>
@@ -104,17 +113,33 @@ function AccountForm() {
                 <CardContent className={"flex flex-col gap-3"}>
                     <div className={"flex flex-col gap-1.5"}>
                         <Label>Account Name</Label>
-                        <Input required/>
+                        <Input autoFocus required/>
                     </div>
                     <div className={"flex flex-col gap-1.5 w-[60%]"}>
                         <Label>Account Group</Label>
                         <Combobox options={[...accountGroups]} selected={""}/>
                     </div>
-                    <div className={"p-3 border rounded-lg flex flex-col  gap-1.5"}>
+                    <div className={"flex gap-3"}>
+                        <div className={"flex flex-col gap-1.5 w-[60%]"}>
+                            <Label>Email Id</Label>
+                            <Input  required/>
+                        </div>
+                        <div className={"flex flex-col gap-1.5"}>
+                            <Label>Contact</Label>
+                            <Input required/>
+                        </div>
+                    </div>
+                    <div className={"p-4 border rounded-lg flex flex-col  gap-1.5"}>
                         <Label>Op. balance</Label>
-                        <div className={"flex gap-1"}>
-                            <Input placeholder={"As On 01-04-2024"}/>
-                            <ToggleGroup type={"single"} className={"border rounded-md h-8 px-[2px]"}>
+                        <div className={"flex gap-1 items-center"}>
+                            <div className={"flex w-full"}>
+                                <div
+                                    className={"flex text-white rounded-l-md bg-primary h-7.5 w-10 items-center justify-center"}>
+                                    <BiRupee/>
+                                </div>
+                                <Input className={"bg-white rounded-l-none"} placeholder={"As On 01-04-2024"}/>
+                            </div>
+                            <ToggleGroup type={"single"} value={"Db"} className={"border rounded-md h-8 px-[2px]"}>
                                 <ToggleGroupItem value={"Db"} className={"h-7"}>
                                     Db
                                 </ToggleGroupItem>
@@ -124,14 +149,71 @@ function AccountForm() {
                             </ToggleGroup>
                         </div>
                     </div>
-                    <Dialog>
-                        <DialogTrigger className={"w-full"}>
-                            <Button className={"w-full gap-3 font-normal justify-start"} variant={"outline"}>
-                                <IoAdd/>
-                                Add Address
-                            </Button>
-                        </DialogTrigger>
-                        <AddressForm/>
+                    {
+                        addresses != undefined ?
+                            (
+                                <div className={"flex flex-col gap-2"}>
+                                    {
+                                        addresses.map((e) => (
+                                            <Card className={"p-4"}>
+                                                <CardHeader className={"p-0"}>
+                                                    <CardTitle className={"flex items-center justify-between"}>
+                                                        <div className={"flex"}>
+                                                            <IoLocationOutline/>
+                                                            {e.label}
+                                                        </div>
+                                                        <div className={"flex gap-1 items-center"}>
+                                                            <Button className={"p-1 h-min"} variant={"ghost"}
+                                                                    size={"sm"}>
+                                                                <IoPencil className={"text-muted-foreground"}/>
+                                                            </Button>
+                                                            <Button className={"p-1 h-min"} variant={"ghost"}
+                                                                    size={"sm"}
+                                                                    onClick={() => {
+                                                                        setAddresses((prevAddress) => {
+                                                                            if (prevAddress) {
+                                                                                return prevAddress.filter((address) => address.address != e.address);
+                                                                            } else {
+                                                                                return [];
+                                                                            }
+                                                                        });
+                                                                    }}
+                                                            >
+                                                                <IoTrash className={"text-muted-foreground"}/>
+                                                            </Button>
+                                                        </div>
+                                                    </CardTitle>
+                                                    <CardDescription>
+                                                        {e.address}
+                                                    </CardDescription>
+                                                </CardHeader>
+                                            </Card>
+                                        ))
+                                    }
+                                </div>
+                            ) : <></>
+                    }
+                    <Dialog open={openAddress} onOpenChange={setOpenAddress}>
+                        {
+                            addresses?.length != 2 ?
+                                <DialogTrigger asChild className={"w-full"}>
+                                    <Button className={"w-full gap-3 font-normal justify-start"} variant={"outline"}>
+                                        <IoAdd/>
+                                        Add Address
+                                    </Button>
+                                </DialogTrigger> : <></>
+
+                        }
+                        <AddressForm onDataSubmit={(values) => {
+                            setAddresses((prevAddress) => {
+                                if (prevAddress) {
+                                    return [...prevAddress, values];
+                                } else {
+                                    return [values];
+                                }
+                            });
+                            setOpenAddress(false);
+                        }}/>
                     </Dialog>
                 </CardContent>
             </Card>
@@ -144,7 +226,7 @@ function AccountForm() {
                     </CardHeader>
                     <CardContent className={"flex flex-col gap-3"}>
                         <div className={"flex flex-col gap-1.5 w-[60%]"}>
-                            <Label>Registration Type</Label>
+                        <Label>Registration Type</Label>
                             <Combobox options={[
                                 {
                                     label: "Regular",
@@ -166,11 +248,16 @@ function AccountForm() {
                             <Input required/>
                         </div>
                         <div className={"flex justify-end"}>
-                            <Button className={"px-0"} variant={"link"} size={"sm"}>
+                            <Button className={"px-0"} variant={"link"}>
                                 Add Licenses
                             </Button>
                         </div>
                     </CardContent>
+                </Card>
+                <Card className={"flex justify-end p-2"}>
+                    <SearchGstIn/>
+                    <BankDetails/>
+                    <MoreSettings/>
                 </Card>
             </div>
         </div>
@@ -180,13 +267,30 @@ function AccountForm() {
 function AddressForm({onDataSubmit}: { onDataSubmit?: (values: Address) => void }) {
     const form = useForm<z.infer<typeof addressSchema>>({
         resolver: zodResolver(addressSchema),
-    });
+    })
 
-    function onSubmit(values: z.infer<typeof addressSchema>) {
-        const address = values as Address;
-        onDataSubmit && onDataSubmit(address);
+
+    const onSubmit = (values: z.infer<typeof addressSchema>) => {
+
+        const address: Address = {
+            address: values.address,
+            label: values.label,
+            city: values.city,
+            pinCode: values.pinCode,
+            route: values.route,
+            state: values.city,
+            village: values.village
+        }
+
+        onDataSubmit!(address);
         form.reset();
     }
+
+    const handleKeyDown = (event: any) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    };
 
     return (
         <DialogContent>
@@ -196,65 +300,82 @@ function AddressForm({onDataSubmit}: { onDataSubmit?: (values: Address) => void 
                 </DialogDescription>
             </DialogHeader>
             <DialogBody>
-                <div className={"flex flex-col gap-3"}>
-                    <div className={"flex flex-col gap-1.5 w-[60%]"}>
-                        <Label>
-                            Address Type
-                        </Label>
-                        <Input placeholder={"Office, Billing, Shipping..."}/>
-                    </div>
-                    <div className={"flex flex-col gap-1.5"}>
-                        <Label>
-                            Address
-                        </Label>
-                        <Input/>
-                    </div>
-                    <div className={"flex gap-3"}>
-                        <div className={"flex flex-col gap-1.5 w-[60%]"}>
-                            <Label>
-                                State
-                            </Label>
-                            <Combobox options={statesAndCodes.map((e) => {
-                                return {
-                                    value: e.state,
-                                    label: e.state
-                                }
-                            })} selected={""}/>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handleKeyDown}
+                          className={"flex flex-col gap-3"}>
+                        <FormField name={"label"} render={({field}) => (
+                            <FormItem className={"w-[60%]"}>
+                                <FormLabel>Address Label</FormLabel>
+                                <FormControl>
+                                    <Input placeholder={"Home, Billing, Shipping"} autoFocus {...field}/>
+                                </FormControl>
+                            </FormItem>)}/>
+                        <FormField name={"address"} render={({field}) => (
+                            <FormItem>
+                                <FormLabel>Address</FormLabel>
+                                <FormControl>
+                                    <Input {...field}/>
+                                </FormControl>
+                            </FormItem>)}/>
+                        <div className={"flex gap-3"}>
+                            <FormField name={"state"} render={({field}) => (
+                                <FormItem className={"w-[60%]"}>
+                                    <FormLabel>State</FormLabel>
+                                    <FormControl className={"flex flex-col gap-2"}>
+                                        <Combobox
+                                            placeholder={""}
+                                            className={"w-full"}
+                                            mode={"single"}
+                                            onChange={(value) => field.onChange(value)}
+                                            options={statesAndCodes.map((e) =>
+                                                ({label: e.state, value: e.code}))}
+                                            selected={field.value != null ? field.value : ""}/>
+                                    </FormControl>
+                                </FormItem>)}
+                            />
+                            <FormField name={"city"} render={({field}) => (
+                                <FormItem>
+                                    <FormLabel>City</FormLabel>
+                                    <FormControl>
+                                        <Input {...field}/>
+                                    </FormControl>
+                                </FormItem>)}
+                            />
                         </div>
-                        <div className={"flex flex-col gap-1.5"}>
-                            <Label>
-                                City
-                            </Label>
-                            <Input/>
+                        <div className={"flex gap-3"}>
+                            <FormField name={"village"} render={({field}) => (
+                                <FormItem className={"w-[60%]"}>
+                                    <FormLabel>Village</FormLabel>
+                                    <FormControl>
+                                        <Input {...field}/>
+                                    </FormControl>
+                                </FormItem>)}
+                            />
+                            <FormField name={"pinCode"} render={({field}) => (
+                                <FormItem className={"w-[30]"}>
+                                    <FormLabel>Pin Code</FormLabel>
+                                    <FormControl>
+                                        <Input {...field}/>
+                                    </FormControl>
+                                </FormItem>)}
+                            />
+                            <FormField name={"route"} render={({field}) => (
+                                <FormItem className={"w-[20%]"}>
+                                    <FormLabel>Route</FormLabel>
+                                    <FormControl>
+                                        <Input {...field}/>
+                                    </FormControl>
+                                </FormItem>)}
+                            />
                         </div>
-                    </div>
-                    <div className={"flex gap-3"}>
-                        <div className={"flex flex-col gap-1.5 w-[80%]"}>
-                            <Label>
-                                Village
-                            </Label>
-                            <Input/>
+                        <div className={"flex justify-end mt-8"}>
+                            <Button variant={"secondary"} type={"submit"} className={"w-min"}>
+                                Add Address
+                            </Button>
                         </div>
-                        <div className={"flex flex-col gap-1.5 w-[80%]"}>
-                            <Label>
-                                Pin Code
-                            </Label>
-                            <Input/>
-                        </div>
-                        <div className={"flex flex-col gap-1.5"}>
-                            <Label>
-                                Route
-                            </Label>
-                            <Input/>
-                        </div>
-                    </div>
-                </div>
+                    </form>
+                </Form>
             </DialogBody>
-            <DialogFooter className={"mt-4"}>
-                <Button variant={"secondary"}>
-                    Add Address
-                </Button>
-            </DialogFooter>
         </DialogContent>
     );
 }
