@@ -38,6 +38,9 @@ import {useRouter} from "next/navigation";
 import {Table, TableHead, TableHeader} from "@/components/ui/table";
 import {DataTable} from "@/app/erp/dashboard/accounts/data-table";
 import {columns} from "@/app/erp/dashboard/accounts/columns";
+import {toast} from "sonner";
+import {useEffect, useState} from "react";
+import {Toaster} from "@/components/ui/sonner";
 
 const account = [
     {
@@ -52,6 +55,35 @@ const account = [
 
 export default function AccountsDashboard() {
     const router = useRouter();
+    const [accounts, setAccounts] = useState();
+    const [loading, setLoading] = useState(true);
+
+    function getAccounts() {
+        const userId = localStorage.getItem("userId");
+
+        if (userId != null) {
+            const promise = fetch("/api/accounts/fetch-accounts", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({userId: userId})
+            })
+
+            promise.then(async (response) => {
+                const d = await response.json();
+                console.log(d)
+                setLoading(false);
+                setAccounts(d.accounts);
+            })
+        } else {
+            toast.error("User Not Found !")
+        }
+    }
+
+    useEffect(() => {
+        getAccounts();
+    }, []);
 
     return (
         <div className="flex flex-col w-[100%] h-[100%]" onKeyDown={(e) => {
@@ -92,7 +124,10 @@ export default function AccountsDashboard() {
             </div>
             <div className="flex flex-col h-[100%] overflow-hidden">
                 <div className={"page-transition h-full flex flex-col"}>
-                    <DataTable columns={columns} data={[]}/>
+                    {
+                        accounts != undefined ?
+                            <DataTable columns={columns} data={accounts!}/> : <></>
+                    }
                 </div>
                 <div className="toolbar flex w-[100%] flex-row py-2 gap-2 px-3 justify-between items-center border-t">
                     <div className="flex gap-2">
@@ -172,6 +207,7 @@ export default function AccountsDashboard() {
                     </Popover>
                 </div>
             </div>
+            <Toaster/>
         </div>
     );
 }

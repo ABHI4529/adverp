@@ -4,6 +4,7 @@ import {GeistMono} from "geist/font/mono";
 import {SideBar} from "@/components/ui/sidebar";
 import {ThemeProvider} from "@/utils/theme-provider";
 import DashboardHeader from "@/components/ui/dashheader";
+import Sidebar from "@/app/help-desk/help-components/sidebar";
 
 export const metadata = {
     title: "AdvCloud",
@@ -21,7 +22,7 @@ export default function DashboardLayout({
         <div className="flex flex-col h-screen">
             <DashboardHeader></DashboardHeader>
             <div className="flex h-[100%]">
-                <SideBar></SideBar>
+                <Sidebar/>
                 <div className="flex flex-col h-full w-[100%]">{children}</div>
             </div>
         </div>

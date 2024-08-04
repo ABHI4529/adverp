@@ -88,6 +88,15 @@ export default function MoreSettings() {
                         </div>
                         <Switch/>
                     </div>
+                    <div className={"flex border p-2 rounded-lg justify-between items-center gap-1.5"}>
+                        <div className={"flex flex-col"}>
+                            <p>Transporter</p>
+                            <p className={"text-muted-foreground text-xs"}>
+                                This account is a transporter.
+                            </p>
+                        </div>
+                        <Switch/>
+                    </div>
                 </div>
                 <DialogFooter>
                     <Button className={"gap-2"}>

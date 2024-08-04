@@ -1,21 +1,21 @@
 "use client";
 
 import {ColumnDef} from "@tanstack/table-core";
+import {AccountType} from "@/app/types/account-type";
 
-export type Account = {
-    id: string;
-    account_name : string;
-    op_bal : string;
-}
 
-export const columns : ColumnDef<Account>[]=[
-    {
-        accessorKey : "id",
-        header : "ID"
-    },
+export const columns : ColumnDef<AccountType>[]=[
     {
         accessorKey : "account_name",
         header : "Particulars"
+    },
+    {
+        accessorKey : "contact",
+        header : "Contact"
+    },
+    {
+        accessorKey : "account_group",
+        header : "Group"
     },
     {
         accessorKey : "op_bal",

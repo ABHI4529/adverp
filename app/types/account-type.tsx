@@ -13,7 +13,7 @@ export interface Licenses {
     licenseNumber: string;
 }
 
-export interface BankDetails {
+export interface BankModel {
     bankName: string;
     branchName: string;
     accountNumber: string;
@@ -23,9 +23,10 @@ export interface BankDetails {
 export interface AccountType {
     id : string;
     account_name : string;
-    account_group : string;
+    account_group : string | string[];
     op_bal : number;
     bal_type : string;
+    userId : string;
     category : string;
     address : Address[];
     contact : string;
@@ -36,7 +37,7 @@ export interface AccountType {
     isECom : boolean;
     isTransporter : boolean;
     msmeUdyam : string;
-    bankDetails : BankDetails;
+    bankDetails : BankModel;
     stopInvoice : boolean;
     dueOn : string;
     typeOfTax : string;
